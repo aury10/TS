@@ -18,9 +18,12 @@ time series analysis and forecasting for furniture sales.
 import warnings
 import itertools
 import numpy as np
+import matplotlib.pyplot as plt
+warnings.filterwarnings("ignore")
+plt.style.use('fivethirtyeight')
 import pandas as pd
-import matplotlib
 import statsmodels.api as sm
+import matplotlib
 
 # 1) read data from path
 
@@ -69,24 +72,34 @@ print(times_stamps_Office_Supplies)
 '''
 In this step i chech na value and remove not important colunm for this analysis
 '''
-furniture.drop('Row ID', 1)
+#col = list(df.columns.values) 
+cols = ['Row ID', 'Order ID', 'Ship Date', 'Ship Mode', 'Customer ID', 'Customer Name', 'Segment', 'Country', 'City', 'State', 'Postal Code', 'Region', 'Product ID', 'Category', 'Sub-Category', 'Product Name', 'Quantity', 'Discount', 'Profit']
+furniture.drop(cols, axis=1, inplace=True)
 furniture = furniture.sort_values('Order Date')
+furniture.isnull().sum()
 print(furniture.isnull().sum())
-
-furniture = furniture.groupby('Order Date')
-print(furniture )
+#['Sales'].sum().reset_index()
 
 
+furniture = furniture.groupby('Order Date')['Sales'].sum().reset_index()
+
+furniture = furniture.set_index('Order Date')
+print(furniture.index)
+
+furniture.plot(figsize=(15, 6))
+plt.show()
 # 4 - Indexing with Time Series Data
 
+#furniture = furniture.set_index('Order Date')
+
+#print(furniture.index)
 
 
+#fur = furniture['Order Date', 'Sales']
+#print(fur)
 
-
-
-
-
-
+#fur.plot(figsize=(15, 6))
+#plt.show()
 
 
 
