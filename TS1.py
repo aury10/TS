@@ -25,7 +25,7 @@ import pandas as pd
 import statsmodels.api as sm
 import matplotlib
 
-# 1) read data from path
+# read data from path
 
 df = pd.read_excel('Superstore.xls')
 print(df.head())
@@ -73,24 +73,135 @@ print(times_stamps_Office_Supplies)
 In this step i chech na value and remove not important colunm for this analysis
 '''
 #col = list(df.columns.values) 
-cols = ['Row ID', 'Order ID', 'Ship Date', 'Ship Mode', 'Customer ID', 'Customer Name', 'Segment', 'Country', 'City', 'State', 'Postal Code', 'Region', 'Product ID', 'Category', 'Sub-Category', 'Product Name', 'Quantity', 'Discount', 'Profit']
+cols = ['Row ID', 'Order ID', 'Ship Date', 'Ship Mode', 'Customer ID', 'Customer Name', 
+'Segment', 'Country', 'City', 'State', 'Postal Code', 'Region', 'Product ID', 'Category', 
+'Sub-Category', 'Product Name', 'Quantity', 'Discount', 'Profit']
+
 furniture.drop(cols, axis=1, inplace=True)
 furniture = furniture.sort_values('Order Date')
-furniture.isnull().sum()
-print(furniture.isnull().sum())
-#['Sales'].sum().reset_index()
 
+# find NA
+furniture.isnull().sum()
+
+# Indexing with Time Series Data
 
 furniture = furniture.groupby('Order Date')['Sales'].sum().reset_index()
-
 furniture = furniture.set_index('Order Date')
 print(furniture.index)
 
-furniture.plot(figsize=(15, 6))
-plt.show()
-# 4 - Indexing with Time Series Data
 
-#furniture = furniture.set_index('Order Date')
+# Average of sales by day to get a nice plot
+y_sm = furniture['Sales'].resample('SM').mean()
+y_ms = furniture['Sales'].resample('MS').mean()
+
+
+# B         business day frequency
+# C         custom business day frequency (experimental)
+# D         calendar day frequency
+# W         weekly frequency
+# M         month end frequency
+# SM        semi-month end frequency (15th and end of month)
+# BM        business month end frequency
+# CBM       custom business month end frequency
+# MS        month start frequency
+# SMS       semi-month start frequency (1st and 15th)
+# BMS       business month start frequency
+# CBMS      custom business month start frequency
+# Q         quarter end frequency
+# BQ        business quarter endfrequency
+# QS        quarter start frequency
+# BQS       business quarter start frequency
+# A         year end frequency
+# BA, BY    business year end frequency
+# AS, YS    year start frequency
+# BAS, BYS  business year start frequency
+# BH        business hour frequency
+# H         hourly frequency
+# T, min    minutely frequency
+# S         secondly frequency
+# L, ms     milliseconds
+# U, us     microseconds
+# N         nanoseconds
+
+
+print(y_sm['2014':])
+
+#Visualizing Furniture Sales Time Series Data
+
+y_ms.plot(figsize=(15, 6))
+plt.xlabel('years order')
+plt.ylabel('values')
+plt.show()
+
+y_sm.plot(figsize=(15, 6))
+plt.show()
+
+# Dapres legraphique nous pouvons observer un effet de saisonalité
+# Au debut de chaque années nous observons queles vente sont base au debut de chaque années
+
+y_sm['2017':].plot(figsize=(15, 6))
+plt.xlabel('years order')
+plt.ylabel('values')
+plt.show()
+
+# Nous avons le pic devente en decembre et les ventes les plus bases en janvier
+
+# Decomposition de la serie temporelle  (trend, seasonality, and noise. )
+
+decomposition_ts = sm.tsa.seasonal_decompose(y_ms, model='additive')
+
+from pylab import rcParams
+rcParams['figure.figsize'] = 18, 8
+fig = decomposition_ts.plot()
+plt.show()
+
+#  On confirme l'effet de la saisonnalité
+
+# Time series forecasting with ARIMA
+
+p = d = q = range(0, 2)
+pdq_coef = list(itertools.product(p, d, q))
+seasonal_pdq = [(x[0], x[1], x[2], 12) for x in list(itertools.product(p, d, q))]
+print('Examples of parameter combinations for Seasonal ARIMA...')
+print('SARIMAX: {} x {}'.format(pdq_coef[1], seasonal_pdq[1]))
+print('SARIMAX: {} x {}'.format(pdq_coef[1], seasonal_pdq[2]))
+print('SARIMAX: {} x {}'.format(pdq_coef[2], seasonal_pdq[3]))
+print('SARIMAX: {} x {}'.format(pdq_coef[2], seasonal_pdq[4]))
+
+# En theorie le choix du meilleur model est possible avec le critere BIC ou AIC
+
+for param in pdq_coef:
+	for param_seasonal in seasonal_pdq:
+		mod = sm.tsa.statespace.SARIMAX(y_ms, 
+				order=param, 
+				seasonal_order=param_seasonal,
+				 enforce_stationarity=False, 
+				 enforce_invertibility=False)
+	results = mod.fit()
+	print('ARIMA{}x{}12 - AIC:{}'.format(param, param_seasonal, results.aic))
+
+# best model ARIMA(1, 1, 1)x(1, 1, 1, 12)12 - AIC:283.36610170351906
+
+
+
+# Fitting the ARIMA model
+
+
+mod = sm.tsa.statespace.SARIMAX(y_sm,
+                                order=(1, 1, 1),
+                                seasonal_order=(1, 1, 1, 12),
+                                enforce_stationarity=False,
+                                enforce_invertibility=False)
+results = mod.fit()
+print(results.summary().tables[1])
+
+
+# Diagnostique des erreurs (normalité correlation, )
+results.plot_diagnostics(figsize=(16, 8))
+plt.show()
+
+# le model n'est pas trop bon car les erreur ne sont presque pas normale
+
 
 #print(furniture.index)
 
