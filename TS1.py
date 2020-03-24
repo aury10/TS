@@ -58,4 +58,7 @@ times_stamps = furniture['Order Date'].min(), furniture['Order Date'].max()
 print(times_stamps)
 
 print(furniture['City'])
+print(furniture['Category'])
+
+
 
