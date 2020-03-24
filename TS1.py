@@ -38,9 +38,24 @@ print(df.describe())
 nom_col = list(df.columns.values) 
 print(nom_col)
 
+'''
+['Row ID', 'Order ID', 'Order Date', 'Ship Date', 'Ship Mode', 
+'Customer ID', 'Customer Name', 'Segment', 'Country', 'City', 
+'State', 'Postal Code', 'Region', 'Product ID', 'Category', 
+'Sub-Category', 'Product Name', 'Sales', 'Quantity', 'Discount', 'Profit']
+'''
+
 cat_data = df['Category']
-print(cat_data.describe())
+#print(cat_data.describe())
 
 furniture = df[df['Category']== 'Furniture']
+#print(furniture)
 
-print(furniture )
+print(furniture['Order Date'])
+
+#timestamp order 
+times_stamps = furniture['Order Date'].min(), furniture['Order Date'].max()
+print(times_stamps)
+
+print(furniture['City'])
+
