@@ -25,6 +25,12 @@ import pandas as pd
 import statsmodels.api as sm
 import matplotlib
 
+
+matplotlib.rcParams['axes.labelsize'] = 14
+matplotlib.rcParams['xtick.labelsize'] = 12
+matplotlib.rcParams['ytick.labelsize'] = 12
+matplotlib.rcParams['text.color'] = 'k'
+
 # read data from path
 
 df = pd.read_excel('Superstore.xls')
@@ -172,13 +178,17 @@ print('SARIMAX: {} x {}'.format(pdq_coef[2], seasonal_pdq[4]))
 
 for param in pdq_coef:
 	for param_seasonal in seasonal_pdq:
-		mod = sm.tsa.statespace.SARIMAX(y_ms, 
+		try:
+			mod = sm.tsa.statespace.SARIMAX(y_ms, 
 				order=param, 
 				seasonal_order=param_seasonal,
 				 enforce_stationarity=False, 
 				 enforce_invertibility=False)
-	results = mod.fit()
-	print('ARIMA{}x{}12 - AIC:{}'.format(param, param_seasonal, results.aic))
+			results = mod.fit()
+			print('ARIMA{}x{}12 - AIC:{}'.format(param, 
+			param_seasonal, results.aic))
+		except:
+			continue
 
 # best model ARIMA(1, 1, 1)x(1, 1, 1, 12)12 - AIC:283.36610170351906
 
@@ -192,15 +202,35 @@ mod = sm.tsa.statespace.SARIMAX(y_sm,
                                 seasonal_order=(1, 1, 1, 12),
                                 enforce_stationarity=False,
                                 enforce_invertibility=False)
-results = mod.fit()
-print(results.summary().tables[1])
+resultss = mod.fit()
+print(resultss.summary().tables[1])
 
 
 # Diagnostique des erreurs (normalité correlation, )
-results.plot_diagnostics(figsize=(16, 8))
+resultss.plot_diagnostics(figsize=(16, 8))
 plt.show()
 
-# le model n'est pas trop bon car les erreur ne sont presque pas normale
+# le model n'est pas trop bon car les erreurs sont presque normale
+
+
+# Validating forecasts
+#nous comparons les ventes prévues aux ventes réelles de la série chronologique
+# et nous fixons les prévisions à partir du 2017-01-01 
+#jusqu'à la fin des données.
+
+
+pred = results.get_prediction(start=pd.to_datetime('2017-01-01'), dynamic=False)
+pred_ci = pred.conf_int()
+ax = y_sm['2014':].plot(label='observed values')
+pred.predicted_mean.plot(ax=ax, label='One-step ahead Forecast', alpha=.7, figsize=(14, 7))
+ax.fill_between(pred_ci.index,
+                pred_ci.iloc[:, 0],
+                pred_ci.iloc[:, 1], color='k', alpha=.2)
+ax.set_xlabel('Date')
+ax.set_ylabel('Furniture Sales')
+plt.legend()
+plt.show()
+
 
 
 #print(furniture.index)
