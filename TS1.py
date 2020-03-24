@@ -22,21 +22,18 @@ import pandas as pd
 import matplotlib
 import statsmodels.api as sm
 
-# read data from path
-
+# 1) read data from path
 
 df = pd.read_excel('Superstore.xls')
-
 print(df.head())
-print(df.describe())
 
 # iterating the columns 
 '''for col in df.columns: 
     print(col) '''
 
 # names col
-nom_col = list(df.columns.values) 
-print(nom_col)
+col = list(df.columns.values) 
+print(col)
 
 '''
 ['Row ID', 'Order ID', 'Order Date', 'Ship Date', 'Ship Mode', 
@@ -45,20 +42,56 @@ print(nom_col)
 'Sub-Category', 'Product Name', 'Sales', 'Quantity', 'Discount', 'Profit']
 '''
 
+# 2) Some extraction and statistics
+
+print(df.describe())
 cat_data = df['Category']
-#print(cat_data.describe())
+print(cat_data )
 
+# furniture
 furniture = df[df['Category']== 'Furniture']
-#print(furniture)
+times_stamps_furniture = furniture['Order Date'].min(), furniture['Order Date'].max()
+print(times_stamps_furniture)
+# (Timestamp('2014-01-06 00:00:00'), Timestamp('2017-12-30 00:00:00'))
+# For this shop we have around 4 years furniture data set 
 
-print(furniture['Order Date'])
 
-#timestamp order 
-times_stamps = furniture['Order Date'].min(), furniture['Order Date'].max()
-print(times_stamps)
+# Office_Supplies furniture
+Office_Supplies = df[df['Category']== 'Office Supplies']
+print( Office_Supplies)
+times_stamps_Office_Supplies = Office_Supplies['Order Date'].min(), Office_Supplies['Order Date'].max()
+print(times_stamps_Office_Supplies)
 
-print(furniture['City'])
-print(furniture['Category'])
+# Same conclusion as furniture
+
+
+# 3 - Data processing 
+'''
+In this step i chech na value and remove not important colunm for this analysis
+'''
+furniture.drop('Row ID', 1)
+furniture = furniture.sort_values('Order Date')
+print(furniture.isnull().sum())
+
+furniture = furniture.groupby('Order Date')
+print(furniture )
+
+
+# 4 - Indexing with Time Series Data
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
